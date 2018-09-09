@@ -3,17 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <style>
-#field { width:220px; height:220px; background-color:#F91; }
-.box { float:left; width:20px; height:20px; margin:1px; background-color:#888; }
+#field { background-color:#b06e35; }
+.box { float:left; width:20px; height:20px; margin:1px; background-color:#FDD; }
 </style>
 </head>
 <body>
 <div id="field">
 </div>
 <script>
+const X = 12; const Y = 9;
+var field = document.getElementById('field');
+field.style.width = (X*22)+"px";
+field.style.height= (Y*22)+"px";
 (function(){
-    var field = document.getElementById('field');
-    for(var i=0;i<100;i++){
+    for(var i=0;i<X*Y;i++){
         var box = document.createElement('div');
         box.classList.add('box');
         field.appendChild(box);
