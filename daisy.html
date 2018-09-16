@@ -10,17 +10,137 @@
 <body>
 <div id="field">
 </div>
+<button id="ssbutton">start</button>
+<button id="clearbutton">clear</button>
+<button id="stepbutton" onclick="step();apply();">step</button>
+<br/>
+<input id="setM" type="number" value="12"></input>
+<input id="setN" type="number" value="16"></input>
+<button id="resizebutton">resize</button>
 <script>
-const X = 12; const Y = 9;
+var M, N;
+var current;
+var next;
 var field = document.getElementById('field');
-field.style.width = (X*22)+"px";
-field.style.height= (Y*22)+"px";
-(function(){
-    for(var i=0;i<X*Y;i++){
-        var box = document.createElement('div');
-        box.classList.add('box');
-        field.appendChild(box);
+var stateColor = { 0: "#0f0f0f", 1: "#f0f0f0" };
+var parseId = function(id){ 
+    var ii = Number(id.replace("box_","").replace(/_.*/,""));
+    var jj = Number(id.replace(/box_.*_/,""));
+    return {i:ii,j:jj};
+};
+var gen = function(m,n){
+    var x = [];
+    for(var i=0;i<m+2;i++){
+        x.push([]);
+        for(var j=0;j<n+2;j++){
+            x[i].push(0);
+        }
     }
+    return x;
+};
+var setDOM = function(m,n){
+    field.innerHTML=""; //erase
+    field.style.width = (n*22)+"px";
+    field.style.height= (m*22)+"px";
+        for(var i=0;i<m;i++){
+    for(var j=0;j<n;j++){
+            // DOM生成
+            var box = document.createElement('div');
+            field.appendChild(box);
+            box.classList.add('box');
+            box.id="box_"+(i+1)+"_"+(j+1);
+            box.onclick = function(e){
+                var p = parseId(this.id);
+                current[p.i][p.j] = (current[p.i][p.j]+1) % 2 ;
+                apply();
+            }
+            box.oncontextmenu = function(e){
+                console.log(e.target.id);
+                var p = parseId(e.target.id);
+                console.log("cur="+current[p.i][p.j]);
+                console.log("env="+env(p.i,p.j));
+                console.log("next:"+nextState(current[p.i][p.j],env(p.i,p.j)));
+                return false;
+            };
+        }
+    }
+};
+
+var env = function(i,j){
+    var e = 0;
+    for(var di=-1;di<2;di++){
+        for(var dj=-1;dj<2;dj++){
+            e = e+ current[i+di][j+dj];
+        }
+    }
+    return e;
+}
+var nextState = function(me,env){
+    if(me==1){
+        return (env==3||env==4) ? 1 : 0;
+    }else{
+        return env==3 ? 1 : 0;
+    }
+};
+var step = function(){
+    for(var i=1;i<=M;i++){
+        for(var j=1;j<=N;j++){
+            next[i][j] = nextState(current[i][j],env(i,j));
+        }
+    }
+    for(var i=1;i<=M;i++){
+        for(var j=1;j<=N;j++){
+            current[i][j] = next[i][j];
+        }
+    }
+};
+var apply = function(){
+    for(var i=1;i<=M;i++){
+        for(var j=1;j<=N;j++){
+            document.getElementById('box_'+i+'_'+j)
+                .style.backgroundColor = stateColor[current[i][j]];
+        }
+    }
+};
+var intervalId;
+var start = function(e){
+    intervalId = setInterval(function(){step();apply();},100);
+    document.getElementById('ssbutton').onclick = stop;
+    e.target.textContent = "stop";
+};
+var stop = function(e){
+    clearInterval(intervalId);
+    document.getElementById('ssbutton').onclick = start;
+    e.target.textContent = "start";
+};
+var resize = function(){
+    var newM = Number(document.getElementById('setM').value);
+    var newN = Number(document.getElementById('setN').value);
+    var tmp = gen(newM,newN);
+    next = gen(newM,newN);
+    setDOM(newM,newN);
+    for(var i=0;i<Math.min(M,newM);i++){
+        for(var j=0;j<Math.min(N,newN);j++){
+            tmp[i][j] = current[i][j];
+        }
+    }
+    current = tmp;
+    M = newM; N = newN;
+};
+    
+// 初期化
+(function(){
+    resize();
+    current = gen(M,N);
+    next = gen(M,N);
+    setDOM(M,N);
+    document.getElementById('ssbutton').onclick = start;
+    document.getElementById('clearbutton').onclick = function(){
+        current=gen(M,N);
+        apply();
+    };
+    document.getElementById('resizebutton').onclick = resize;
+    apply();
 })();
 </script>
 </body>
